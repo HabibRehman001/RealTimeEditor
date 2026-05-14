@@ -1,12 +1,13 @@
 import express from 'express'
 import { createServer } from 'http'
 import { Server } from 'socket.io'
-import {YSocketIO} from 'y-socket.io/dist/server'
+import { YSocketIO } from 'y-socket.io/dist/server'
 
 
 
 const app = express()
 const httpServer = createServer(app)
+const PORT = Number(process.env.PORT) || 3000
 
 app.use(express.static('public'))
 
@@ -18,7 +19,7 @@ const io = new Server(httpServer, {
 })
 
 const ySocketIO = new YSocketIO(io)
-ySocketIO.initialize();
+ySocketIO.initialize()
 
 
 
@@ -33,6 +34,15 @@ app.get('/health', (req, res) => {
 
 
 
-httpServer.listen(3000, () => {
-  console.log('Server is running on port 3000')
-})  
+httpServer.on('error', (error) => {
+  if (error.code === 'EADDRINUSE') {
+    console.error(`Port ${PORT} is already in use. In PowerShell, start with a different port: $env:PORT=3001; npm.cmd run dev`)
+    process.exit(1)
+  }
+
+  throw error
+})
+
+httpServer.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`)
+})
